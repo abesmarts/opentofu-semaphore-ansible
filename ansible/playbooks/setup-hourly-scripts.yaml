@@ -1,0 +1,22 @@
+- name: Setup Hourly Python Script Execution
+  hosts: all
+  become: yes
+  vars:
+    python_scripts_dir: /opt/python_scripts
+    
+  tasks:
+    - name: Create hourly system monitor cron job
+      cron:
+        name: "Hourly system monitor"
+        minute: "0"
+        job: "{{ python_scripts_dir }}/venv/bin/python {{ python_scripts_dir }}/system_monitor.py | logger -t system-monitor"
+        user: root
+        
+    
+    - name: List all cron jobs
+      shell: crontab -l
+      register: cron_jobs
+      
+    - name: Display current cron jobs
+      debug:
+        var: cron_jobs.stdout_lines

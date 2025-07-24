@@ -1,0 +1,18 @@
+- name: Run System Monitor Script
+  hosts: all
+  become: yes
+  vars:
+    python_scripts_dir: /opt/python_scripts
+    
+  tasks:
+    - name: Run system monitor script
+      shell: "{{ python_scripts_dir }}/venv/bin/python {{ python_scripts_dir }}/system_monitor.py"
+      register: monitor_output
+      
+    - name: Log system monitor output
+      shell: "echo '{{ monitor_output.stdout }}' | logger -t system-monitor"
+      when: monitor_output.stdout is defined
+      
+    - name: Display monitor results
+      debug:
+        var: monitor_output.stdout_lines

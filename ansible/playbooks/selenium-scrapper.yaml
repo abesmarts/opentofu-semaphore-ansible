@@ -1,0 +1,18 @@
+- name: Run Selenium Web Scraper
+  hosts: all
+  become: yes
+  vars:
+    python_scripts_dir: /opt/python_scripts
+    
+  tasks:
+    - name: Run selenium web scraper
+      shell: "su - chromeuser -c 'DISPLAY=:99 {{ python_scripts_dir }}/venv/bin/python {{ python_scripts_dir }}/selenium_web_scraper.py'"
+      register: scraper_output
+      
+    - name: Log scraper output
+      shell: "echo '{{ scraper_output.stdout }}' | logger -t selenium-scraper"
+      when: scraper_output.stdout is defined
+      
+    - name: Display scraper results
+      debug:
+        var: scraper_output.stdout_lines

@@ -1,0 +1,229 @@
+- name: Configure Docker VMs with Enhanced Capabilities
+  hosts: all
+  become: yes
+  vars:
+    python_scripts_dir: /opt/python_scripts
+    log_dir: /var/log/applications
+    
+  tasks:
+    - name: Update package cache
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: Install essential packages
+      apt:
+        name:
+          - python3
+          - python3-pip
+          - python3-venv
+          - htop
+          - curl
+          - wget
+          - git
+          - vim
+          - openssh-server
+          - rsync
+          - logrotate
+        state: present
+        update_cache: yes
+
+    - name: Add Google Chrome repository key
+      apt_key:
+        url: https://dl.google.com/linux/linux_signing_key.pub
+        state: present
+
+    - name: Add Google Chrome repository
+      apt_repository:
+        repo: "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main"
+        state: present
+        filename: google-chrome
+
+    - name: Update package cache after adding Chrome repo
+      apt:
+        update_cache: yes
+
+    - name: Install Google Chrome
+      apt:
+        name: google-chrome-stable
+        state: present
+
+    - name: Install additional packages for Selenium
+      apt:
+        name:
+          - xvfb
+          - unzip
+          - wget
+          - curl
+          - gnupg
+        state: present
+
+    - name: Get Chrome version for ChromeDriver compatibility
+      shell: google-chrome --version | awk '{print $3}' | cut -d. -f1
+      register: chrome_major_version
+      changed_when: false
+
+    - name: Get latest ChromeDriver version
+      uri:
+        url: "https://chromedriver.storage.googleapis.com/LATEST_RELEASE_{{ chrome_major_version.stdout }}"
+        method: GET
+        return_content: yes
+      register: chromedriver_version
+
+    - name: Download ChromeDriver
+      get_url:
+        url: "https://chromedriver.storage.googleapis.com/{{ chromedriver_version.content | trim }}/chromedriver_linux64.zip"
+        dest: /tmp/chromedriver.zip
+        mode: '0644'
+
+    - name: Extract ChromeDriver
+      unarchive:
+        src: /tmp/chromedriver.zip
+        dest: /tmp/
+        remote_src: yes
+
+    - name: Install ChromeDriver
+      copy:
+        src: /tmp/chromedriver
+        dest: /usr/local/bin/chromedriver
+        mode: '0755'
+        remote_src: yes
+
+    - name: Create application directories
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+      loop:
+        - "{{ python_scripts_dir }}"
+        - "{{ log_dir }}"
+        - /var/log/ansible
+
+    - name: Create devuser
+      user:
+        name: devuser
+        groups: sudo
+        append: yes
+        shell: /bin/bash
+        create_home: yes
+        generate_ssh_key: yes
+        ssh_key_bits: 2048
+        ssh_key_file: .ssh/id_rsa
+
+    - name: Create Chrome user for Selenium
+      user:
+        name: chromeuser
+        groups: audio,video
+        append: yes
+        shell: /bin/bash
+        create_home: yes
+
+    - name: Set up SSH key for devuser
+      authorized_key:
+        user: devuser
+        state: present
+        key: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
+
+    - name: Configure SSH service
+      service:
+        name: ssh
+        state: started
+        enabled: yes
+
+    - name: Create Python virtual environment
+      command: python3 -m venv {{ python_scripts_dir }}/venv
+      args:
+        creates: "{{ python_scripts_dir }}/venv/bin/activate"
+
+    - name: Install Python packages in virtual environment
+      pip:
+        name:
+          - requests
+          - flask
+          - psutil
+          - docker
+          - elasticsearch
+          - loguru
+          - selenium
+          - webdriver-manager
+          - beautifulsoup4
+        virtualenv: "{{ python_scripts_dir }}/venv"
+
+    - name: Create Selenium scripts directory
+      file:
+        path: "{{ python_scripts_dir }}/selenium_scripts"
+        state: directory
+        owner: chromeuser
+        group: chromeuser
+        mode: '0755'
+
+    - name: Create Xvfb service for headless browser
+      copy:
+        content: |
+          [Unit]
+          Description=X Virtual Framebuffer Service
+          After=network.target
+
+          [Service]
+          Type=simple
+          User=chromeuser
+          ExecStart=/usr/bin/Xvfb :99 -screen 0 1024x768x24 -ac +extension GLX +render -noreset
+          Restart=always
+          RestartSec=5
+
+          [Install]
+          WantedBy=multi-user.target
+        dest: /etc/systemd/system/xvfb.service
+        mode: '0644'
+
+    - name: Enable and start Xvfb service
+      systemd:
+        name: xvfb
+        enabled: yes
+        state: started
+        daemon_reload: yes
+
+    - name: Configure log rotation for application logs
+      copy:
+        content: |
+          {{ log_dir }}/*.log {
+              weekly
+              missingok
+              rotate 52
+              compress
+              delaycompress
+              notifempty
+              copytruncate
+              create 0644 root root
+          }
+        dest: /etc/logrotate.d/application_logs
+        mode: '0644'
+
+    - name: Create systemd service for log forwarding
+      copy:
+        content: |
+          [Unit]
+          Description=Application Log Forwarder
+          After=network.target
+
+          [Service]
+          Type=simple
+          User=root
+          WorkingDirectory={{ log_dir }}
+          ExecStart=/bin/bash -c 'tail -F {{ log_dir }}/*.log | logger -t application-logs'
+          Restart=always
+          RestartSec=5
+
+          [Install]
+          WantedBy=multi-user.target
+        dest: /etc/systemd/system/log-forwarder.service
+        mode: '0644'
+
+    - name: Enable and start log forwarder service
+      systemd:
+        name: log-forwarder
+        enabled: yes
+        state: started
+        daemon_reload: yes
