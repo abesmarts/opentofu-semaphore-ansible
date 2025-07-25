@@ -1,6 +1,6 @@
 - name: Deploy Python Scripts to Remote Hosts
   hosts: all
-  become: yes
+  become: true
   vars:
     python_scripts_local: "{{ playbook_dir }}/../python_scripts"
     python_scripts_remote: /opt/python_scripts
@@ -19,8 +19,8 @@
       synchronize:
         src: "{{ python_scripts_local }}/"
         dest: "{{ python_scripts_remote }}/"
-        delete: yes
-        recursive: yes
+        delete: true
+        recursive: true
         rsync_opts:
           - "--exclude=__pycache__"
           - "--exclude=*.pyc"
@@ -33,7 +33,7 @@
         owner: devuser
         group: devuser
         mode: '0755'
-        recurse: yes
+        recurse: true
 
     - name: Check if requirements.txt exists
       stat:

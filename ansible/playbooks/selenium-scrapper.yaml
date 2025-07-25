@@ -1,6 +1,6 @@
 - name: Run Selenium Web Scraper
   hosts: all
-  become: yes
+  become: true
   vars:
     python_scripts_dir: /opt/python_scripts
     

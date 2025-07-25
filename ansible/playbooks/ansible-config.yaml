@@ -1,6 +1,6 @@
 - name: Configure Docker VMs with Enhanced Capabilities
   hosts: all
-  become: yes
+  become: true
   vars:
     python_scripts_dir: /opt/python_scripts
     log_dir: /var/log/applications
@@ -8,7 +8,7 @@
   tasks:
     - name: Update package cache
       apt:
-        update_cache: yes
+        update_cache: true
         cache_valid_time: 3600
 
     - name: Install essential packages
@@ -26,7 +26,7 @@
           - rsync
           - logrotate
         state: present
-        update_cache: yes
+        update_cache: true
 
     - name: Add Google Chrome repository key
       apt_key:
@@ -41,7 +41,7 @@
 
     - name: Update package cache after adding Chrome repo
       apt:
-        update_cache: yes
+        update_cache: true
 
     - name: Install Google Chrome
       apt:
@@ -67,7 +67,7 @@
       uri:
         url: "https://chromedriver.storage.googleapis.com/LATEST_RELEASE_{{ chrome_major_version.stdout }}"
         method: GET
-        return_content: yes
+        return_content: true
       register: chromedriver_version
 
     - name: Download ChromeDriver
@@ -80,14 +80,14 @@
       unarchive:
         src: /tmp/chromedriver.zip
         dest: /tmp/
-        remote_src: yes
+        remote_src: true
 
     - name: Install ChromeDriver
       copy:
         src: /tmp/chromedriver
         dest: /usr/local/bin/chromedriver
         mode: '0755'
-        remote_src: yes
+        remote_src: true
 
     - name: Create application directories
       file:
@@ -105,10 +105,10 @@
       user:
         name: devuser
         groups: sudo
-        append: yes
+        append: true
         shell: /bin/bash
-        create_home: yes
-        generate_ssh_key: yes
+        create_home: true
+        generate_ssh_key: true
         ssh_key_bits: 2048
         ssh_key_file: .ssh/id_rsa
 
@@ -116,9 +116,9 @@
       user:
         name: chromeuser
         groups: audio,video
-        append: yes
+        append: true
         shell: /bin/bash
-        create_home: yes
+        create_home: true
 
     - name: Set up SSH key for devuser
       authorized_key:
@@ -130,7 +130,7 @@
       service:
         name: ssh
         state: started
-        enabled: yes
+        enabled: true
 
     - name: Create Python virtual environment
       command: python3 -m venv {{ python_scripts_dir }}/venv
@@ -181,9 +181,9 @@
     - name: Enable and start Xvfb service
       systemd:
         name: xvfb
-        enabled: yes
+        enabled: true
         state: started
-        daemon_reload: yes
+        daemon_reload: true
 
     - name: Configure log rotation for application logs
       copy:
@@ -224,6 +224,6 @@
     - name: Enable and start log forwarder service
       systemd:
         name: log-forwarder
-        enabled: yes
+        enabled: true
         state: started
-        daemon_reload: yes
+        daemon_reload: true
