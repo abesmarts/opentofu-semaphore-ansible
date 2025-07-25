@@ -3,7 +3,7 @@
 services:
   # Elasticsearch
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:9.3.0
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.18.3
     container_name: elasticsearch
     environment:
       - discovery.type=single-node
@@ -15,7 +15,8 @@ services:
       - "9300:9300"
     volumes:
       - elasticsearch_data:/usr/share/elasticsearch/data
-      - ./elk/elasticsearch:/usr/share/elasticsearch:ro
+      - ./elk/elasticsearch/elasticsearch.yaml:/usr/share/elasticsearch/config/elasticsearch.yaml:ro
+  
     networks:
       - semaphore_network
     healthcheck:
@@ -28,7 +29,7 @@ services:
 
   # Logstash
   logstash:
-    image: docker.elastic.co/logstash/logstash:9.3.0
+    image: docker.elastic.co/logstash/logstash:8.18.3
     container_name: logstash
     depends_on:
       elasticsearch:
@@ -37,8 +38,8 @@ services:
       - "5044:5044"
       - "9600:9600"
     volumes:
-      - ./elk/logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf:ro
-      - ./elk/logstash/pipelines.yml:/usr/share/logstash/config/pipelines.yml:ro
+      - ./elk/logstash/logstash.conf:/usr/share/logstash/logstash.conf:ro
+      - ./elk/logstash/pipelines.yml:/usr/share/logstash/config/pipeline.yaml:ro
     environment:
       - "JAVA_OPTS=-Xmx1g -Xms1g"
       - "LS_JAVA_OPTS=-Xmx1g -Xms1g"
@@ -69,7 +70,7 @@ services:
       - XPACK_SECURITY_ENABLED=false
       - XPACK_ENCRYPTEDSAVEDOBJECTS_ENCRYPTIONKEY=a7a6311933d3503b89bc2dbc36572c33a6c10925682e591bffcab6911c06786d
     volumes:
-      - ./elk/kibana:/usr/share/kibana:ro
+      - ./elk/kibana/kibana.yaml:/usr/share/kibana/config:ro
       - kibana_data:/usr/share/kibana/data
     networks:
       - semaphore_network
@@ -90,7 +91,7 @@ services:
       logstash:
         condition: service_healthy
     volumes:
-      - ./elk/filebeat/:/usr/share/filebeat:ro
+      - ./elk/filebeat/filebeat.yaml:/usr/share/filebeat/config/filebeat.yaml:ro
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - /var/log:/var/log:ro
