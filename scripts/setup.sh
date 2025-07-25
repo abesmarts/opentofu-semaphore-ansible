@@ -129,16 +129,6 @@ setup_elasticsearch_requirements() {
     fi
 }
 
-# Create project directories
-create_directories() {
-    print_status "Creating project directories..."
-    
-    # Create ELK directories
-    mkdir -p elk/{elasticsearch,logstash,kibana,filebeat}
-    mkdir -p ansible/python_scripts
-    
-    print_status "Project directories created"
-}
 
 # Initialize OpenTofu 
 initialize_opentofu() {
@@ -165,7 +155,7 @@ start_services() {
     
     # Wait for services to be healthy
     print_status "Waiting for Elasticsearch to be ready..."
-    timeout=300
+    timeout=200
     while ! curl -s http://localhost:9200/_cluster/health | grep -q "green\|yellow"; do
         sleep 10
         timeout=$((timeout - 10))
@@ -176,7 +166,7 @@ start_services() {
     done
     
     print_status "Waiting for Kibana to be ready..."
-    timeout=300
+    timeout=200
     while ! curl -s http://localhost:5601/api/status | grep -q "available"; do
         sleep 10
         timeout=$((timeout - 10))
@@ -217,7 +207,6 @@ main() {
     check_docker
     generate_ssh_keys
     setup_elasticsearch_requirements
-    create_directories
     initialize_opentofu
     start_services
     verify_installations

@@ -70,7 +70,7 @@ services:
       - XPACK_SECURITY_ENABLED=false
       - XPACK_ENCRYPTEDSAVEDOBJECTS_ENCRYPTIONKEY=a7a6311933d3503b89bc2dbc36572c33a6c10925682e591bffcab6911c06786d
     volumes:
-      - ./elk/kibana/kibana.yaml:/usr/share/kibana/config:ro
+      - ./elk/kibana/kibana.yaml:/usr/share/kibana/config/kibana.yaml:ro
       - kibana_data:/usr/share/kibana/data
     networks:
       - semaphore_network
