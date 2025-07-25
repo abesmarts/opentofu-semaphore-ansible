@@ -1,0 +1,18 @@
+[project]
+name = "opentofu-semaphore-ansible"
+version = "0.1.0"
+description = "Just a test"
+authors = [
+    {name = "abner espinoza",email = "abespinoza155@gmail.com"}
+]
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "requests (>=2.32.4,<3.0.0)",
+    "psutil (>=7.0.0,<8.0.0)"
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
