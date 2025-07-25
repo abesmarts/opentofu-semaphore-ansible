@@ -1,4 +1,4 @@
-version: '3.8'
+
 
 services:
   # Elasticsearch
@@ -15,7 +15,7 @@ services:
       - "9300:9300"
     volumes:
       - elasticsearch_data:/usr/share/elasticsearch/data
-      - ../elk/elasticsearch/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro
+      - elk/elasticsearch/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro
     networks:
       - semaphore_network
     healthcheck:
@@ -37,8 +37,8 @@ services:
       - "5044:5044"
       - "9600:9600"
     volumes:
-      - ../elk/logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf:ro
-      - ../elk/logstash/pipelines.yml:/usr/share/logstash/config/pipelines.yml:ro
+      - elk/logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf:ro
+      - elk/logstash/pipelines.yml:/usr/share/logstash/config/pipelines.yml:ro
     environment:
       - "JAVA_OPTS=-Xmx1g -Xms1g"
       - "LS_JAVA_OPTS=-Xmx1g -Xms1g"
@@ -69,7 +69,7 @@ services:
       - XPACK_SECURITY_ENABLED=false
       - XPACK_ENCRYPTEDSAVEDOBJECTS_ENCRYPTIONKEY=a7a6311933d3503b89bc2dbc36572c33a6c10925682e591bffcab6911c06786d
     volumes:
-      - ../elk/kibana/kibana.yml:/usr/share/kibana/config/kibana.yml:ro
+      - elk/kibana/kibana.yml:/usr/share/kibana/config/kibana.yml:ro
       - kibana_data:/usr/share/kibana/data
     networks:
       - semaphore_network
@@ -90,7 +90,7 @@ services:
       logstash:
         condition: service_healthy
     volumes:
-      - ../elk/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+      - elk/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - /var/log:/var/log:ro
@@ -159,9 +159,9 @@ services:
       SEMAPHORE_TASK_LOG_PATH: /var/log/semaphore/tasks.log
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - ../ansible:/mnt/localproject/ansible:ro
-      - ../opentofu:/mnt/localproject/opentofu:ro
-      - ./requirements.txt:/etc/semaphore/requirements.txt:ro
+      - ansible:/mnt/localproject/ansible:ro
+      - opentofu:/mnt/localproject/opentofu:ro
+      # - ./requirements.txt:/etc/semaphore/requirements.txt:ro
       - semaphore_data:/tmp/semaphore
       - semaphore_logs:/var/log/semaphore
     networks:

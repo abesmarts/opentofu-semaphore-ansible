@@ -1,22 +1,20 @@
-FROM semaphoreui/semaphore:latest
+FROM semaphoreui/semaphore:v2.15.0 
 
-# Install additional packages
+# Switch to root to install things 
 USER root
-RUN apk add --no-cache \
-    git \
-    openssh-client \
-    opentofu \
-    ansible \
-    python3 \
-    py3-pip \
-    curl \
-    wget \
-    unzip
 
-# Create log directories
+# Install required packages
+RUN apk add --no-cache curl
+RUN apk add --no-cache opentofu --repository=https://dl-cdn.alpinelinux.org/alpine/edge/testing/
+
+# Install kubectl
+RUN curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" && \
+    chmod +x kubectl && \
+    mv kubectl /usr/local/bin/kubectl
+
+# Create log directory for Semaphore
 RUN mkdir -p /var/log/semaphore && \
-    chown -R semaphore:semaphore /var/log/semaphore
+    chown semaphore:root /var/log/semaphore
 
+# Switch back to semaphore user
 USER semaphore
-
-EXPOSE 3000

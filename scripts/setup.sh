@@ -143,6 +143,7 @@ create_directories() {
 # Initialize OpenTofu 
 initialize_opentofu() {
     print_status "Initializing OpenTofu..." 
+    cd ..
     cd opentofu
     tofu init
     cd ..

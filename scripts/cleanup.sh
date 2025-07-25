@@ -26,6 +26,7 @@ print_error() {
 cleanup_containers() {
     print_status "Stopping and removing all containers and volumes..."
     
+    cd ..
     cd semaphore
     
     # Stop all services
