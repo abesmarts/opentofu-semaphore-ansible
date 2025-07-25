@@ -1,13 +1,13 @@
-# plugin: docker
-# docker_host: unix://var/run/docker.sock
-# compose:
-#   ansible_host: ansible_host
-#   ansible_port: ansible_port
-#   ansible_user: ansible_user
-# keyed_groups:
-#   - key: docker_labels['com.docker.compose.service']
-#     prefix: compose_service
-# filters:
-#   - docker_name == "ansible-vm1"
-plugin: community.docker.docker_containers
-docker_host: unix:///var/run/docker.sock
+plugin: docker
+docker_host: unix://var/run/docker.sock
+compose:
+  ansible_host: ansible_host
+  ansible_port: ansible_port
+  ansible_user: ansible_user
+keyed_groups:
+  - key: docker_labels['com.docker.compose.service']
+    prefix: compose_service
+filters:
+  - docker_name == "ansible-vm1"
+# plugin: community.docker.docker_containers
+# docker_host: unix:///var/run/docker.sock
